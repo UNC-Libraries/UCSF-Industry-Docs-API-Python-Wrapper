@@ -4,7 +4,12 @@ This is a simple Python Wrapper for the UCSF [Industry Documents Library](https:
 
 It offers basic functionality to perform queries on the API to retrieve metadata of the documents in the library. 
 
-The two main methods are:
+You will want to install the package using `pip`:
+
+`pip install industryDocumentsWrapper`
+
+
+The the package has one class `IndustryDocsSearch` with two main methods of are:
 * `IndustryDocsSearch.query()`: performs the query on the API 
 * `IndustryDocsSearch.save()`: saves query results as a JSON or Parquet file.
 
