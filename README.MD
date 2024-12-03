@@ -19,7 +19,7 @@ Basic usage looks like:
 import industry_documents_wrapper as idw
 
 wrapper = idw.IndustryDocsSearch()
-wrapper.query(q="industry:tobacco AND case:'State of North Carolina' AND collection:'JUUL labs Collection', n=100)
+wrapper.query(q="industry:tobacco AND case:'State of North Carolina' AND collection:'JUUL labs Collection', n=100")
 wrapper.save('query_results.json', format='json')
 ```
 
