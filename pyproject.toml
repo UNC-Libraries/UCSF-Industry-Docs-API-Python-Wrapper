@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "industryDocumentsWrapper"
-version = "0.1.0"
+version = "0.1.2"
 description = "A simple python wrapper for the UCSF Industry Documents API."
 authors = ["Rolando Rodriguez <rolando@ad.unc.edu>"]
 maintainers = ["Rolando Rodriguez <rolando@ad.unc.edu>"]
 license = "Apache-2.0"
 readme = "README.md"
-packages = [{include = "industry_documents_wrapper"}]
+packages = [{include = "industryDocumentsWrapper"}]
 repository = "https://github.com/UNC-Libraries/UCSF-Industry-Docs-API-Python-Wrapper"
 keywords = ["UCSF", "Industry Documents"]
 

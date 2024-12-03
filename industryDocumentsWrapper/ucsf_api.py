@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import re
 import requests
+import time
 import polars as pl
     
 
@@ -36,20 +37,25 @@ class IndustryDocsSearch:
             n = float('inf')
             
         while (next_cursor != current_cursor) and (len(self.results) < n):
+
             if next_cursor:
-                current_cursor = next_cursor
                 query = self._update_cursormark(query, next_cursor)
+                
             r = requests.get(query).json()
             
+            current_cursor = r['responseHeader']['params']['cursorMark']
+
             if n < len(r['response']['docs']):
                 self.results.extend(r['response']['docs'][:n])
-            elif len(self.results) + len(r['response']['docs']) > n:
+            
+            elif n < (len(self.results) + len(r['response']['docs'])):
                 self.results.extend(r['response']['docs'][:n-len(self.results)])
+                
             else:
                 self.results.extend(r['response']['docs'])
-                next_cursor = r['nextCursorMark'] 
+                next_cursor = r['nextCursorMark']
                 
-            print(f"{len(self.results)}/{n} documents collected", end='\r')
+            print(f"{len(self.results)}/{n} documents collected")
                 
         return
     
@@ -72,6 +78,7 @@ class IndustryDocsSearch:
         author:str = False,
         source:str = False,
         bates:str = False,
+        box:str = False,
         originalformat:str = False,
         wt:str ='json',
         cursor_mark:str='*', 
@@ -91,6 +98,7 @@ class IndustryDocsSearch:
                              author=author, 
                              source=source, 
                              batesexpanded=bates, 
+                             box=box,
                              originalformat=originalformat, 
                              wt=wt, 
                              cursorMark=cursor_mark, 
@@ -102,7 +110,6 @@ class IndustryDocsSearch:
             
         """Queries the UCSF Industry Documents Solr Library for documents"""
         self._loop_results(query, n)
-        print('Adding URLs to query results')
         if industry:
             self._create_links(industry)
 

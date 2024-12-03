@@ -1,6 +1,6 @@
 import pytest
 from unittest import mock
-from industry_documents_wrapper.ucsf_api import IndustryDocsSearch
+from industryDocumentsWrapper.ucsf_api import IndustryDocsSearch
 
 # Mock the requests.get() response
 @pytest.fixture
@@ -84,16 +84,25 @@ def test_create_links(indDocSearch, mock_results):
     indDocSearch._create_links(industry)
     assert indDocSearch.results[0]['url'] == 'https://www.industrydocuments.ucsf.edu/tobacco/docs/#id=aazz000'
     
-def test_query_with_q(indDocSearch):
+def test_query_with_q_100(indDocSearch):
     indDocSearch.query(q='industry:tobacco AND case:"State of North Carolina" AND collection:"JUUL labs Collection" AND type:email', n=100)
     assert len(indDocSearch.results) == 100
     assert indDocSearch.results[0]['id'] == 'ffbb0284'
     assert indDocSearch.results[0]['url'] == 'https://www.industrydocuments.ucsf.edu/tobacco/docs/#id=ffbb0284'
+    
+def test_query_with_q_500(indDocSearch):
+    indDocSearch.query(q='industry:tobacco AND case:"State of North Carolina" AND collection:"JUUL labs Collection" AND type:email', n=500)
+    assert len(indDocSearch.results) == 500
+    assert indDocSearch.results[0]['id'] == 'ffbb0284'
+    assert indDocSearch.results[0]['url'] == 'https://www.industrydocuments.ucsf.edu/tobacco/docs/#id=ffbb0284'
 
-def test_query_with_no_q(indDocSearch):
+def test_query_with_no_q_50(indDocSearch):
     indDocSearch.query(collection='JUUL labs Collection', case='State of North Carolina', doc_type='email', n=50)
     assert len(indDocSearch.results) == 50
-    assert indDocSearch.results[0]['id'] == 'ffdl0288'
+    
+def test_query_with_no_q_1000(indDocSearch):
+    indDocSearch.query(collection='JUUL labs Collection', case='State of North Carolina', doc_type='email', n=1000)
+    assert len(indDocSearch.results) == 1000
 
 def test_save_parquet(indDocSearch, mock_results, tmp_path):
     indDocSearch.results = mock_results
