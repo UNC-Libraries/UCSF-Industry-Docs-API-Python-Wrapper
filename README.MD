@@ -18,7 +18,7 @@ Basic usage looks like:
 ```
 import industry_documents_wrapper as idw
 
-wrapper = idw.IndustryDocsSearch()
+wrapper = idw.ucsf_api.IndustryDocsSearch()
 wrapper.query(q="industry:tobacco AND case:'State of North Carolina' AND collection:'JUUL labs Collection', n=100")
 wrapper.save('query_results.json', format='json')
 ```
@@ -28,7 +28,7 @@ Alternatively, to avoid constructing the whole query, you can pass parts of the 
 ```
 import industry_documents_wrapper as idw
 
-wrapper = idw.IndustryDocsSearch()
+wrapper = idw.ucsf_api.IndustryDocsSearch()
 wrapper.query(industry='tobacco', case='State of North Carolina', collection='JUUl labs collection', n=100)
 wrapper.save('query_results.json', format='json')
 ```
