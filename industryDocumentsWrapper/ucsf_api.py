@@ -38,16 +38,11 @@ class IndustryDocsSearch:
         while (next_cursor != current_cursor) and (len(self.results) < n):
 
             if next_cursor:
-                print(current_cursor)
                 current_cursor = next_cursor
-                print(current_cursor)
                 query = self._update_cursormark(query, current_cursor)
-                print(query)
             
-            print(query)
             r = requests.get(query).json()
             
-            print(r['response']['numFound'])
             if n < len(r['response']['docs']):
                 self.results.extend(r['response']['docs'][:n])
             
@@ -58,9 +53,7 @@ class IndustryDocsSearch:
                 self.results.extend(r['response']['docs'])
             
             next_cursor = r['nextCursorMark']
-            
-            print(f'Current cursor: {current_cursor} | Next cursor: {next_cursor}')
-                
+                            
             print(f"{len(self.results)}/{n} documents collected")
                 
         return
