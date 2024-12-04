@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "industryDocumentsWrapper"
-version = "0.1.2"
+version = "0.1.3"
 description = "A simple python wrapper for the UCSF Industry Documents API."
 authors = ["Rolando Rodriguez <rolando@ad.unc.edu>"]
 maintainers = ["Rolando Rodriguez <rolando@ad.unc.edu>"]

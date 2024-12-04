@@ -70,12 +70,14 @@ def test_loop_results_50(indDocSearch):
     query = 'https://metadata.idl.ucsf.edu/solr/ltdl3/query?q=(industry:tobacco AND case:"State of North Carolina" AND collection:"JUUL labs Collection" AND type:email)&wt=json&cursorMark=*&sort=id%20asc'
     indDocSearch._loop_results(query, 50)
     assert len(indDocSearch.results) == 50
+    assert len(set([x['id'] for x in indDocSearch.results])) == 50
     assert indDocSearch.results[0]['id'] == 'ffbb0284'
     
 def test_loop_results_150(indDocSearch):
     query = 'https://metadata.idl.ucsf.edu/solr/ltdl3/query?q=(industry:tobacco AND case:"State of North Carolina" AND collection:"JUUL labs Collection" AND type:email)&wt=json&cursorMark=*&sort=id%20asc'
     indDocSearch._loop_results(query, 150)
     assert len(indDocSearch.results) == 150
+    assert len(set([x['id'] for x in indDocSearch.results])) == 150
     assert indDocSearch.results[0]['id'] == 'ffbb0284'
 
 def test_create_links(indDocSearch, mock_results):
@@ -87,22 +89,26 @@ def test_create_links(indDocSearch, mock_results):
 def test_query_with_q_100(indDocSearch):
     indDocSearch.query(q='industry:tobacco AND case:"State of North Carolina" AND collection:"JUUL labs Collection" AND type:email', n=100)
     assert len(indDocSearch.results) == 100
+    assert len(set([x['id'] for x in indDocSearch.results])) == 100
     assert indDocSearch.results[0]['id'] == 'ffbb0284'
     assert indDocSearch.results[0]['url'] == 'https://www.industrydocuments.ucsf.edu/tobacco/docs/#id=ffbb0284'
     
 def test_query_with_q_500(indDocSearch):
     indDocSearch.query(q='industry:tobacco AND case:"State of North Carolina" AND collection:"JUUL labs Collection" AND type:email', n=500)
     assert len(indDocSearch.results) == 500
+    assert len(set([x['id'] for x in indDocSearch.results])) == 500
     assert indDocSearch.results[0]['id'] == 'ffbb0284'
     assert indDocSearch.results[0]['url'] == 'https://www.industrydocuments.ucsf.edu/tobacco/docs/#id=ffbb0284'
 
 def test_query_with_no_q_50(indDocSearch):
-    indDocSearch.query(collection='JUUL labs Collection', case='State of North Carolina', doc_type='email', n=50)
+    indDocSearch.query(industry='tobacco', collection='JUUL labs Collection', case='State of North Carolina', doc_type='email', n=50)
     assert len(indDocSearch.results) == 50
+    assert len(set([x['id'] for x in indDocSearch.results])) == 50
     
 def test_query_with_no_q_1000(indDocSearch):
-    indDocSearch.query(collection='JUUL labs Collection', case='State of North Carolina', doc_type='email', n=1000)
+    indDocSearch.query(industry='tobacco', collection='JUUL labs Collection', case='State of North Carolina', doc_type='email', n=1000)
     assert len(indDocSearch.results) == 1000
+    assert len(set([x['id'] for x in indDocSearch.results])) == 1000
 
 def test_save_parquet(indDocSearch, mock_results, tmp_path):
     indDocSearch.results = mock_results

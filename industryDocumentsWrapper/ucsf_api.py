@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 import re
 import requests
-import time
 import polars as pl
     
 
@@ -20,13 +19,13 @@ class IndustryDocsSearch:
         if kwargs['q']:
             query = f"{self.base_url}query?q=({kwargs['q']})&wt={kwargs['wt']}&cursorMark={kwargs['cursorMark']}&sort={kwargs['sort']}"
         else:
-            query = f"{self.base_url}query?q=("+' AND '.join([f'{k}:{v}' for k, v in kwargs.items() if v and k != 'wt' and k != 'cursorMark' and k != 'sort'])+f")&wt={kwargs['wt']}&cursorMark={kwargs['cursorMark']}&sort={kwargs['sort']}"
+            query = f"{self.base_url}query?q=("+' AND '.join([f'{k}:{v}' for k, v in kwargs.items() if v and k != 'wt' and k != 'cursorMark' and k != 'sort' and k != 'n'])+f")&wt={kwargs['wt']}&cursorMark={kwargs['cursorMark']}&sort={kwargs['sort']}"
        
         return query
     
     def _update_cursormark(self, query:str, cursor_mark: str) -> str:
         """Updates cursor mark in query string"""
-        return re.sub(r'(?<=cursorMark=)[A-Za-z0-9*]+(?=&)', cursor_mark, query)
+        return re.sub(r'(?<=cursorMark=)[A-Za-z0-9*=]+(?=&)', cursor_mark, query)
     
     def _loop_results(self, query:str, n:int) -> None:
         """Iteratively retrieves documents with cursor_mark for Solr deep paging"""
@@ -39,12 +38,16 @@ class IndustryDocsSearch:
         while (next_cursor != current_cursor) and (len(self.results) < n):
 
             if next_cursor:
-                query = self._update_cursormark(query, next_cursor)
-                
+                print(current_cursor)
+                current_cursor = next_cursor
+                print(current_cursor)
+                query = self._update_cursormark(query, current_cursor)
+                print(query)
+            
+            print(query)
             r = requests.get(query).json()
             
-            current_cursor = r['responseHeader']['params']['cursorMark']
-
+            print(r['response']['numFound'])
             if n < len(r['response']['docs']):
                 self.results.extend(r['response']['docs'][:n])
             
@@ -53,7 +56,10 @@ class IndustryDocsSearch:
                 
             else:
                 self.results.extend(r['response']['docs'])
-                next_cursor = r['nextCursorMark']
+            
+            next_cursor = r['nextCursorMark']
+            
+            print(f'Current cursor: {current_cursor} | Next cursor: {next_cursor}')
                 
             print(f"{len(self.results)}/{n} documents collected")
                 
@@ -64,7 +70,6 @@ class IndustryDocsSearch:
         for doc in self.results:
             doc['url'] = f"https://www.industrydocuments.ucsf.edu/{industry}/docs/#id={doc['id']}"
     
-    # TODO: add functionality for /select/* queries for specific fields
     def query(self, 
         q:str = False,
         case:str = False,
@@ -110,6 +115,7 @@ class IndustryDocsSearch:
             
         """Queries the UCSF Industry Documents Solr Library for documents"""
         self._loop_results(query, n)
+        
         if industry:
             self._create_links(industry)
 
