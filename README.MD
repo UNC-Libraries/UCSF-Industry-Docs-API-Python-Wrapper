@@ -16,9 +16,9 @@ The the package has one class `IndustryDocsSearch` with two main methods of are:
 Basic usage looks like: 
 
 ```
-import industry_documents_wrapper as idw
+from industryDocumentsWrapper import IndustryDocsSearch 
 
-wrapper = idw.ucsf_api.IndustryDocsSearch()
+wrapper = IndustryDocsSearch()
 wrapper.query(q="industry:tobacco AND case:'State of North Carolina' AND collection:'JUUL labs Collection', n=100")
 wrapper.save('query_results.json', format='json')
 ```
@@ -26,9 +26,9 @@ wrapper.save('query_results.json', format='json')
 Alternatively, to avoid constructing the whole query, you can pass parts of the query as arguments: 
 
 ```
-import industry_documents_wrapper as idw
+from industryDocumentsWrapper import IndustryDocsSearch 
 
-wrapper = idw.ucsf_api.IndustryDocsSearch()
+wrapper = IndustryDocsSearch()
 wrapper.query(industry='tobacco', case='State of North Carolina', collection='JUUl labs collection', n=100)
 wrapper.save('query_results.json', format='json')
 ```

@@ -1,6 +1,6 @@
 import pytest
 from unittest import mock
-from industryDocumentsWrapper.ucsf_api import IndustryDocsSearch
+from industryDocumentsWrapper import IndustryDocsSearch
 
 # Mock the requests.get() response
 @pytest.fixture
