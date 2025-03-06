@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "industryDocumentsWrapper"
+version = "0.111"
+description = "A simple python wrapper for the UCSF Industry Documents API."
+authors = ["Rolando Rodriguez <rolando@ad.unc.edu>"]
+maintainers = ["Rolando Rodriguez <rolando@ad.unc.edu>"]
+license = "Apache-2.0"
+readme = "README.md"
+packages = [{include = "industryDocumentsWrapper"}]
+repository = "https://github.com/UNC-Libraries/UCSF-Industry-Docs-API-Python-Wrapper"
+keywords = ["UCSF", "Industry Documents", "API", "JUUL"]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+polars = "^1.14.0"
+requests = "^2.32.3"
+
+[tool.poetry.group.test.dependencies]
+pytest="^8.2.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

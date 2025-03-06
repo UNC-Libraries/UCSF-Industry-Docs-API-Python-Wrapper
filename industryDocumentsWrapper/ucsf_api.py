@@ -1,8 +1,12 @@
 from dataclasses import dataclass
 import re
+import time
 import requests
 import polars as pl
     
+
+BATCH_TIMEOUT = 30  # seconds
+RATE_LIMIT = 0.1    # seconds between requests
 
 @dataclass
 class IndustryDocsSearch:
@@ -11,16 +15,17 @@ class IndustryDocsSearch:
 
     API Documentation found here: https://www.industrydocuments.ucsf.edu/wp-content/uploads/2020/08/IndustryDocumentsDataAPI_v7.pdf
     """
-    base_url = "https://metadata.idl.ucsf.edu/solr/ltdl3/"
-    results = []
+    def __init__(self):
+        self.__base_url = "https://metadata.idl.ucsf.edu/solr/ltdl3/"
+        self.results = []
     
     def _create_query(self, **kwargs) -> str:
         """Constructs parametrized query"""
         if kwargs['q']:
-            query = f"{self.base_url}query?q=({kwargs['q']})&wt={kwargs['wt']}&cursorMark={kwargs['cursorMark']}&sort={kwargs['sort']}"
+            query = f"{self.__base_url}query?q=({kwargs['q']})&wt={kwargs['wt']}&cursorMark={kwargs['cursorMark']}&sort={kwargs['sort']}"
         else:
-            query = f"{self.base_url}query?q=("+' AND '.join([f'{k}:{v}' for k, v in kwargs.items() if v and k != 'wt' and k != 'cursorMark' and k != 'sort' and k != 'n'])+f")&wt={kwargs['wt']}&cursorMark={kwargs['cursorMark']}&sort={kwargs['sort']}"
-       
+            query = f"{self.__base_url}query?q=("+' AND '.join([f'{k}:"{v}"' for k, v in kwargs.items() if v and k != 'wt' and k != 'cursorMark' and k != 'sort' and k != 'n'])+f")&wt={kwargs['wt']}&cursorMark={kwargs['cursorMark']}&sort={kwargs['sort']}"
+        print(query)
         return query
     
     def _update_cursormark(self, query:str, cursor_mark: str) -> str:
@@ -32,29 +37,37 @@ class IndustryDocsSearch:
         next_cursor = None 
         current_cursor = '*' # initial cursor mark
         
+        # Get initial response to check total available documents
+        initial_response = requests.get(query).json()
+        total_available = initial_response['response']['numFound']
+        print(f"Total available documents: {total_available}")
+        
+        if n > total_available:
+            print(f"Warning: Only {total_available} documents available, which is less than the {n} requested")
+            n = total_available
+        
         if n == -1:
-            n = float('inf')
+            n = total_available
             
         while (next_cursor != current_cursor) and (len(self.results) < n):
-
             if next_cursor:
                 current_cursor = next_cursor
                 query = self._update_cursormark(query, current_cursor)
             
-            r = requests.get(query).json()
+            r = requests.get(query, timeout=BATCH_TIMEOUT).json()
+            docs = r['response']['docs']
             
-            if n < len(r['response']['docs']):
+            if n < len(docs):
                 self.results.extend(r['response']['docs'][:n])
-            
-            elif n < (len(self.results) + len(r['response']['docs'])):
+            elif n < (len(self.results) + len(docs)):
                 self.results.extend(r['response']['docs'][:n-len(self.results)])
-                
             else:
-                self.results.extend(r['response']['docs'])
+                self.results.extend(docs)
             
             next_cursor = r['nextCursorMark']
                             
             print(f"{len(self.results)}/{n} documents collected")
+            time.sleep(RATE_LIMIT)
                 
         return
     
@@ -67,7 +80,7 @@ class IndustryDocsSearch:
         q:str = False,
         case:str = False,
         collection:str = False,
-        doc_type:str = False,
+        type:str = False,
         industry:str = False,
         brand:str = False,
         availability:str = False,
@@ -87,7 +100,7 @@ class IndustryDocsSearch:
         query = self._create_query(q=q, 
                              case=case, 
                              collection=collection, 
-                             type=doc_type, 
+                             type=type, 
                              industry=industry, 
                              brand=brand, 
                              availability=availability, 
@@ -115,9 +128,12 @@ class IndustryDocsSearch:
     # TODO: Determine whether we need to maintain this load method
     def load(self, filename: str) -> pl.DataFrame:
         """Reads results from a local CSV or JSON"""
-        if not filename.lower().endswith('.parquet'):
-            raise Exception("Only parquet format supported currently.")
-        self.results = pl.read_parquet(filename)
+        if filename.lower().endswith('.json'):
+            self.results = pl.read_json(filename)
+        elif filename.lower.endswith('.parquet'):
+            self.results = pl.read_parquet(filename)
+        elif filename.lower().endswith('.csv'):
+            self.results = pl.read_csv(filename)
 
 
     def save(self, filename: str, format: str) -> None:
@@ -126,9 +142,16 @@ class IndustryDocsSearch:
         match format:
             case 'parquet':
                 df.write_parquet(filename)
-            # case 'csv':
-            #     df = df.with_columns(pl.col(pl.List, pl.Struct, pl.Array).list.join(","))
-            #     df.write_csv(filename)
+            case 'csv':
+                nested_cols = df.select([
+                    pl.col(col) for col in df.columns 
+                    if pl.DataFrame(df).schema[col] in [pl.List, pl.Struct, pl.Array]
+                    ]).columns                
+                if nested_cols:
+                    df = df.with_columns([
+                        pl.col(col).map_elements(lambda x: str(x) if x is not None else None, return_dtype=pl.Utf8) for col in nested_cols
+                    ])
+                df.write_csv(filename)
             case 'json':
                 df.write_json(filename)
             case _:

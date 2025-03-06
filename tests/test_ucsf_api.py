@@ -2,6 +2,8 @@ import pytest
 from unittest import mock
 from industryDocumentsWrapper import IndustryDocsSearch
 
+## TO DO: 
+##  1. Fix the mock response and and set tests to use mock response
 # Mock the requests.get() response
 @pytest.fixture
 def mock_json_response():
@@ -57,10 +59,10 @@ def reset_results(indDocSearch):
 # Tests the IndustryDocsSearch methods
     
 def test_create_query_with_q(indDocSearch):
-    assert indDocSearch._create_query(q='collection:test AND industry:tobacco', wt='json', cursorMark='*', sort='id%20asc') == 'https://metadata.idl.ucsf.edu/solr/ltdl3/query?q=(collection:test AND industry:tobacco)&wt=json&cursorMark=*&sort=id%20asc'
+    assert indDocSearch._create_query(q='collection:"test" AND industry:"tobacco"', wt='json', cursorMark='*', sort='id%20asc') == 'https://metadata.idl.ucsf.edu/solr/ltdl3/query?q=(collection:"test" AND industry:"tobacco")&wt=json&cursorMark=*&sort=id%20asc'
     
 def test_create_query_without_q(indDocSearch):
-    assert indDocSearch._create_query(q=False, collection='test', industry='tobacco', wt='json', cursorMark='*', sort='id%20asc') == 'https://metadata.idl.ucsf.edu/solr/ltdl3/query?q=(collection:test AND industry:tobacco)&wt=json&cursorMark=*&sort=id%20asc'
+    assert indDocSearch._create_query(q=False, collection='test', industry='tobacco', wt='json', cursorMark='*', sort='id%20asc') == 'https://metadata.idl.ucsf.edu/solr/ltdl3/query?q=(collection:"test" AND industry:"tobacco")&wt=json&cursorMark=*&sort=id%20asc'
     
 def test_update_cursormark(indDocSearch):
     query = 'https://metadata.idl.ucsf.edu/solr/ltdl3/query?q=(collection:test)&wt=json&cursorMark=*&sort=id%20asc'
@@ -101,14 +103,19 @@ def test_query_with_q_500(indDocSearch):
     assert indDocSearch.results[0]['url'] == 'https://www.industrydocuments.ucsf.edu/tobacco/docs/#id=ffbb0284'
 
 def test_query_with_no_q_50(indDocSearch):
-    indDocSearch.query(industry='tobacco', collection='JUUL labs Collection', case='State of North Carolina', doc_type='email', n=50)
+    indDocSearch.query(industry='tobacco', collection='JUUL labs Collection', case='State of North Carolina', type='email', n=50)
     assert len(indDocSearch.results) == 50
     assert len(set([x['id'] for x in indDocSearch.results])) == 50
     
 def test_query_with_no_q_1000(indDocSearch):
-    indDocSearch.query(industry='tobacco', collection='JUUL labs Collection', case='State of North Carolina', doc_type='email', n=1000)
+    indDocSearch.query(industry='tobacco', collection='JUUL labs Collection', case='State of North Carolina', type='email', n=1000)
     assert len(indDocSearch.results) == 1000
     assert len(set([x['id'] for x in indDocSearch.results])) == 1000
+    
+def test_query_with_no_q_50000(indDocSearch):
+    indDocSearch.query(industry='tobacco', collection='JUUL labs Collection', case='State of North Carolina', type='email', n=50000)
+    assert len(indDocSearch.results) == 50000
+    assert len(set([x['id'] for x in indDocSearch.results])) == 50000
 
 def test_save_parquet(indDocSearch, mock_results, tmp_path):
     indDocSearch.results = mock_results
@@ -120,12 +127,12 @@ def test_save_parquet(indDocSearch, mock_results, tmp_path):
     assert d.exists()
     assert d.stat().st_size > 0
 
-# def test_save_csv(indDocSearch, mock_results, tmp_path):
-#     indDocSearch.results = mock_results
-#     d = tmp_path / 'test.csv'
-#     indDocSearch.save(d, format='csv')
-#     assert d.exists()
-#     assert d.stat().st_size > 0
+def test_save_csv(indDocSearch, mock_results, tmp_path):
+    indDocSearch.results = mock_results
+    d = tmp_path / 'test.csv'
+    indDocSearch.save(d, format='csv')
+    assert d.exists()
+    assert d.stat().st_size > 0
 
 def test_save_json(indDocSearch, mock_results, tmp_path):
     indDocSearch.results = mock_results
