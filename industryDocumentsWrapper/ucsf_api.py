@@ -25,7 +25,6 @@ class IndustryDocsSearch:
             query = f"{self.__base_url}query?q=({kwargs['q']})&wt={kwargs['wt']}&cursorMark={kwargs['cursorMark']}&sort={kwargs['sort']}"
         else:
             query = f"{self.__base_url}query?q=("+' AND '.join([f'{k}:"{v}"' for k, v in kwargs.items() if v and k != 'wt' and k != 'cursorMark' and k != 'sort' and k != 'n'])+f")&wt={kwargs['wt']}&cursorMark={kwargs['cursorMark']}&sort={kwargs['sort']}"
-        print(query)
         return query
     
     def _update_cursormark(self, query:str, cursor_mark: str) -> str:
@@ -40,7 +39,6 @@ class IndustryDocsSearch:
         # Get initial response to check total available documents
         initial_response = requests.get(query).json()
         total_available = initial_response['response']['numFound']
-        print(f"Total available documents: {total_available}")
         
         if n > total_available:
             print(f"Warning: Only {total_available} documents available, which is less than the {n} requested")
